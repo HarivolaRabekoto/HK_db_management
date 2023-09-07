@@ -52,3 +52,37 @@ def modification_membre(id_recherche,colomne,donnee):
         modification_membre(id_recherche,colomne,donnee)
     conn.commit()
     conn.close()
+
+#fonction insérant les informations d'une activité
+def creation_activite(intitule, date, lieu):
+    conn = sqlite3.connect("haikintana.db")
+    c= conn.cursor()
+    c.execute('INSERT INTO activité VALUES (?,?,?)',(intitule,date,lieu))
+    conn.commit()
+    conn.close
+    
+#fonction mettant en relation une activité et ses pôles d'organisation et incréméntant le nombre d'activités de la pôle concernée
+def pole_organisation(pole, intitule):
+    conn = sqlite3.connect("haikintana.db")
+    c= conn.cursor()
+    c.execute('INSERT INTO pôle_activité VALUES (?,?)',(pole,intitule))
+    c.execute('SELECT nombre_activités FROM pôle WHERE nom_pôle=(?)',(pole, ))
+    query_result=c.fetchall()
+    for i in query_result:
+        nombre=i[0]+1
+    c.execute('UPDATE pôle SET nombre_activités=(?) WHERE nom_pôle=(?)',(nombre,pole,))
+    conn.commit()
+    conn.close()
+
+#fonction enregistrant la présence d'une membre à une activité et incréméntant son assiduité
+def presence(id_present,intitule):
+    conn = sqlite3.connect("haikintana.db")
+    c= conn.cursor()
+    c.execute('INSERT INTO membre_activité VALUES (?,?)',(id_present,intitule))
+    c.execute('SELECT assiduité FROM membre WHERE ID=(?)',(id_present, ))
+    query_result=c.fetchall()
+    for i in query_result:
+        nombre=i[0]+1
+    c.execute('UPDATE membre SET assiduité=(?) WHERE ID=(?)',(nombre,id_present,))
+    conn.commit()
+    conn.close()
