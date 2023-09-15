@@ -38,7 +38,7 @@ def modification_membre(id_recherche,colomne,donnee):
     elif colomne==2:
         c.execute("UPDATE membre SET (prénoms)=(?) WHERE (ID)=(?)",(donnee,id_recherche,))
     elif colomne==3:
-        c.execute("UPDATE membre SET (contact)=(?) WHERE (ID)=(?)",(donnee,id_recherche,))
+        c.execute("UPDATE membre SET (email)=(?) WHERE (ID)=(?)",(donnee,id_recherche,))
     elif colomne==4:
         c.execute("UPDATE membre SET (cotisation)=(?) WHERE (ID)=(?)",(donnee,id_recherche,))
     elif colomne==5:
@@ -52,7 +52,15 @@ def modification_membre(id_recherche,colomne,donnee):
         modification_membre(id_recherche,colomne,donnee)
     conn.commit()
     conn.close()
-
+    
+#fonction ajoutant un membre
+def ajout(liste_info):
+    conn = sqlite3.connect("haikintana.db")
+    c= conn.cursor()
+    c.execute('INSERT INTO membre(ID, cotisation, nom, prénoms, email, bénévolat, statut) VALUES(?,?,?,?,?,?,?)',(liste_info))
+    conn.commit()
+    conn.close()
+    
 #fonction insérant les informations d'une activité
 def creation_activite(intitule, date, lieu):
     conn = sqlite3.connect("haikintana.db")
@@ -65,12 +73,20 @@ def creation_activite(intitule, date, lieu):
 def pole_organisation(pole, intitule):
     conn = sqlite3.connect("haikintana.db")
     c= conn.cursor()
-    c.execute('INSERT INTO pôle_activité VALUES (?,?)',(pole,intitule))
-    c.execute('SELECT nombre_activités FROM pôle WHERE nom_pôle=(?)',(pole, ))
+    if pole==1:
+        nom_pole="outreach"
+    elif pole==2:
+        nom_pole="éducation"
+    elif pole==3:
+        nom_pole="observation et instrumentation"
+    elif pole==4:
+        nom_pole="développement et partenariat"
+    c.execute('INSERT INTO pôle_activité VALUES (?,?)',(nom_pole,intitule))
+    c.execute('SELECT nombre_activités FROM pôle WHERE nom_pôle=(?)',(nom_pole,))
     query_result=c.fetchall()
     for i in query_result:
         nombre=i[0]+1
-    c.execute('UPDATE pôle SET nombre_activités=(?) WHERE nom_pôle=(?)',(nombre,pole,))
+    c.execute('UPDATE pôle SET nombre_activités=(?) WHERE nom_pôle=(?)',(nombre,nom_pole))
     conn.commit()
     conn.close()
 
@@ -79,10 +95,27 @@ def presence(id_present,intitule):
     conn = sqlite3.connect("haikintana.db")
     c= conn.cursor()
     c.execute('INSERT INTO membre_activité VALUES (?,?)',(id_present,intitule))
-    c.execute('SELECT assiduité FROM membre WHERE ID=(?)',(id_present, ))
+    c.execute('SELECT assiduité FROM membre WHERE ID=(?)',(id_present,))
     query_result=c.fetchall()
     for i in query_result:
         nombre=i[0]+1
     c.execute('UPDATE membre SET assiduité=(?) WHERE ID=(?)',(nombre,id_present,))
     conn.commit()
+    conn.close()
+
+#fonction affichant la liste de présence à une activité
+def liste_presence(intitule):
+    conn = sqlite3.connect("haikintana.db")
+    c= conn.cursor()
+    c.execute('SELECT COUNT(*) FROM membre_activité WHERE activité=(?)',(intitule,))
+    nombre=c.fetchall()
+    for i in nombre:
+        nombre=i[0]
+    print('Nombre de membres présents:',nombre)
+    c.execute('SELECT ID, nom, prénoms FROM membre WHERE ID IN (SELECT ID_membre FROM membre_activité WHERE activité=(?))',(intitule,))
+    liste=c.fetchall()
+    print ('Liste de présence à l\'activité:')
+    print('Identifiant \t Nom \t\t\t Prénoms ')
+    for i in liste:
+        print(i[0] + '\t\t' + i[1] + '\t\t' + i[2] )
     conn.close()
